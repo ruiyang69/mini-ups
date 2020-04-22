@@ -1,0 +1,26 @@
+{% extends "../base.html" %}
+
+{% block content %}
+    <div class="content-section">
+      <div class="media">
+        <div class="media-body">
+          <h2 class="account-heading">{{ user.username }}</h2>
+          <p class="text-secondary">{{ user.email }}</p>
+          {% if package %}
+            <p>You having the following packages: </p>
+            {% for p in package %}
+              <p>
+                <a  href = "{% url 'detail' package_id=p.package_id %}">
+                  {{ p.item }}
+                </a>
+              </p>
+            {% endfor %} 
+           {% else %}
+           <p>You don't have any packages</p>
+          {%endif%}
+        </div>
+      </div>
+      <!-- FORM HERE -->
+     
+    </div>
+{% endblock content %}

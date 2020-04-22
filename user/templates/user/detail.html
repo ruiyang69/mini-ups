@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Package detail</h1>
+         <h2 class="account-heading">{{ user.username }}</h2>
+         <p class="text-secondary">{{ user.email }}</p>
+         {% if package %}
+           <p>Package ID: {{ package.package_id }}</p>
+           <p>Status: {{package.status}}</p>
+           <p>Item: {{ package.item }} </p>
+           <p>Current location: {{ package.cur_x }},{{package.cur_y}}</p>
+           <p>Destination: {{package.dst_x}},{{package.dst_y}}</p>
+           <a class="nav-item nav-link" href="{% url 'redirect' package_id=package.package_id %}">Redirect</a>
+         {%endif%}  
+
+{% endblock content %}

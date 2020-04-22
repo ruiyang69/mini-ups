@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+  {% if user.is_authenticated %}
+    <h1>Welcome to the mini-UPS system</h1>
+    <div>
+      <a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
+    </div>
+    <div>
+      <a class="nav-item nav-link" href="{% url 'create' %}">Create a  package</a>
+    </div>
+  {%else%}
+    <h1>Please login or register first</h1>
+  {%endif%}    
+
+{% endblock content %}
