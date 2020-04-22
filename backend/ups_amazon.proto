@@ -1,0 +1,55 @@
+syntax = "proto2";
+message Product{
+  required string name = 1;
+  required string description = 2;
+  required int32 count = 3;
+}
+
+message AOrderPlaced{
+  required int32 whid = 1;
+  required int32 x = 2;
+  required int32 y = 3;
+  required int64 packageid = 4;
+  repeated Product things = 5;
+  optional int64 UPSuserid = 6;
+  required int64 seqnum = 7;
+}
+
+message UOrderPlaced{
+  required int64 packageid = 1;
+  required int32 truckid = 2;
+  required int64 seqnum = 3;
+}
+
+message UArrivedAtWarehouse{
+  required int32 truckid = 1;
+  required int64 seqnum = 2;
+}
+
+message ALoadingFinished{
+  required int64 packageid = 1;
+  required int32 truckid = 2;
+  required int64 seqnum = 3;
+}
+
+message UPackageDelivered{
+  required int64 packageid = 1;
+  required int64 seqnum = 2;
+}
+
+message ACommunicate{
+  repeated AOrderPlaced aorderplaced = 1;
+  repeated ALoadingFinished aloaded = 2;
+  repeated int64 acks = 3;
+}
+
+message UCommunicate{
+  repeated UOrderPlaced uorderplaced = 1;
+  repeated UArrivedAtWarehouse uarrived = 2;
+  repeated UPackageDelivered udelivered = 3;
+  repeated int64 acks = 4;
+}
+
+message AUConnect{
+  required int64 worldid = 1;
+}
