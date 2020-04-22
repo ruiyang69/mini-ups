@@ -1,55 +1,45 @@
 syntax = "proto2";
-message Product{
-  required string name = 1;
-  required string description = 2;
-  required int32 count = 3;
+message UA_Connect { 
+  required int64 worldid = 1;
 }
-
-message AOrderPlaced{
-  required int32 whid = 1;
-  required int32 x = 2;
-  required int32 y = 3;
-  required int64 packageid = 4;
-  repeated Product things = 5;
-  optional int64 UPSuserid = 6;
+message UA_TruckCall {
+  required int64 package_id = 1; 
+  repeated AProduct products = 2; 
+  required int32 whnum = 3; 
+  required int64 owner_id =4; 
+  required int32 dest_x = 5; 
+  required int32 dest_y = 6; 
   required int64 seqnum = 7;
 }
-
-message UOrderPlaced{
-  required int64 packageid = 1;
-  required int32 truckid = 2;
+message UA_GoDeliver {
+  required int32 truckid = 1; 
+  required int64 packageid = 2; 
+  required int32 x = 3; 
+  required int32 y = 4; 
+  required int64 seqnum = 5;
+}
+message UA_TruckArrived { 
+  required int32 whnum = 1; 
+  required int32 truck_id = 2; 
   required int64 seqnum = 3;
 }
-
-message UArrivedAtWarehouse{
-  required int32 truckid = 1;
-  required int64 seqnum = 2;
-}
-
-message ALoadingFinished{
-  required int64 packageid = 1;
-  required int32 truckid = 2;
+message UA_Delivered { 
+  required int64 packageid = 1; 
+  required int32 truckid = 2; 
   required int64 seqnum = 3;
 }
-
-message UPackageDelivered{
-  required int64 packageid = 1;
-  required int64 seqnum = 2;
-}
-
-message ACommunicate{
-  repeated AOrderPlaced aorderplaced = 1;
-  repeated ALoadingFinished aloaded = 2;
+message UA_Commands{
+  repeated UA_TruckCall truckCall = 1; 
+  repeated UA_GoDeliver goDeliver = 2; 
   repeated int64 acks = 3;
 }
-
-message UCommunicate{
-  repeated UOrderPlaced uorderplaced = 1;
-  repeated UArrivedAtWarehouse uarrived = 2;
-  repeated UPackageDelivered udelivered = 3;
-  repeated int64 acks = 4;
+message UA_Responses{
+  repeated UA_TruckArrived truckArrived = 1; 
+  repeated UA_Delivered delivered = 2; 
+  repeated int64 acks = 3;
 }
-
-message AUConnect{
-  required int64 worldid = 1;
+message AProduct{
+  required int64 id = 1;
+  required string description = 2; 
+  required int32 count = 3;
 }
