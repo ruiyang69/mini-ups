@@ -27,8 +27,8 @@ def handle_world(Cw, Ca, Cdb):
 def handle_amazon(Cw, Ca, Cdb):
      while True:
           with amazon_lock:
-               UA_Response = amazon_ups_recv(Ca)
-               t2 = threading.Thread(target = process_UA_Response, args = (UA_Response, Cw, Ca, Cdb))
+               UA_Commands = amazon_ups_recv(Ca)
+               t2 = threading.Thread(target = process_UA_Command, args = (UA_Commands, Cw, Ca, Cdb))
                t2.start()
                t2.join()
 

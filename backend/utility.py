@@ -8,6 +8,7 @@ import ups_amazon_pb2 as uapb
 from google.protobuf.internal.decoder import _DecodeVarint32
 from google.protobuf.internal.encoder import _EncodeVarint
 
+C = sqlite3.connect(database="../db.sqlite3")
 
 # email set up
 smtp_server = "smtp.gmail.com"
@@ -163,5 +164,83 @@ def amazon_ups_recv(sock):
 
 
 
-def process_UA_Response(UA_Response, Cw, Ca, Cdb):
-    
+def process_UA_Command(UA_Commands, Cw, Ca, Cdb):
+    global seqnum
+    to_amazon_ack = UA_Commands.acks
+    to_world = wupb.UCommands()
+
+    #print('recieve Amazon truck call')
+    truck_id = 0
+    for uacmd in UA_Commands.truckCall:
+        to_amazon_ack.append(uacmd.seqnum)
+        # insert trucks, initial status is "free status"
+        insert_truck(C, truck_id, "truck free status")
+        truck_id += 1
+        to_world.pickups.append(truck_id, uacmd.whnum, seqnum)
+        send_msg(Cw, to_world) 
+
+        with seq_lock:
+                to_world.pickups.seqnum = seqnum
+                seqnum += 1 
+
+    # send ack and go pick up
+    send_msg(Ca, to_amazon_ack)
+    send_msg(Cw, to_world)
+
+    #recieve Ufinished
+    U_response = world_ups_recv(Cw, True)
+    to_amazon_truckarr = UA_Commands
+    for uresp in U_response.completions:
+        to_amazon_truckarr.truckArrived.append(to_amazon_truckarr.whnum, uresp.truckid, uresp.seqnum)
+        # update truck status
+        update_truck_status(C, uresp.truckid, "the truck is used")
+
+        with seq_lock:
+                uresp.seqnum = seqnum
+                seqnum += 1 
+
+    # send truck arrived
+    send_msg(Ca, to_amazon_truckarr)
+
+    #recieve ack from amazon
+    a_recv = amazon_ups_recv(Ca)
+
+    # recieve aloaded
+    ua_rep = amazon_ups_recv(Ca)
+    to_amazon_ack2 = ua_rep.acks
+    # go deliver
+    to_world2 = wupb.UCommands()
+    for aload in ua_rep.goDeliver:
+        to_amazon_ack2.append(aload.seqnum)                
+        UDeliveryLocation = to_world2.deliveries
+        UDeliveryLocation.packageid = aload.packageid
+        UDeliveryLocation.x = aload.x
+        UDeliveryLocation.y = aload.y
+        to_world2.deliveries.append(aload.truckid, UDeliveryLocation, aload.seqnum)
+
+        # update truck status
+        update_truck_status(C, aload.truckid, "truck free status")
+
+        with seq_lock:
+                aload.seqnum = seqnum
+                seqnum += 1 
+
+    # send ack and go deliever
+    send_msg(Ca, to_amazon_ack2)
+    send_msg(Cw, to_world2)
+
+    #recieve Udelievered made
+    U_response_D = world_ups_recv(Cw, True)
+    to_amazon_UD = UA_Commands
+    for ud in U_response_D.delivered:
+       to_amazon_UD.goDeliver.append(ud.truckid, ud.packageid, U_response_D.completions.x, U_response_D.completions.y, ud.seqnum)
+
+       with seq_lock:
+                ud.seqnum = seqnum
+                seqnum += 1
+
+    # send delievered
+    send_msg(Ca, to_amazon_UD)
+
+    #recieve ack from amazon
+    b_recv = amazon_ups_recv(Ca)
