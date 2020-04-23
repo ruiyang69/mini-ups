@@ -160,3 +160,8 @@ def amazon_ups_recv(sock):
     msg = uapb.UA_Commands()
     msg.ParseFromString(all_data)
     return msg
+
+
+
+def process_UA_Response(UA_Response, Cw, Ca, Cdb):
+    
