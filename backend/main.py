@@ -5,15 +5,15 @@ from _thread import *
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-import world_ups_pb2
-import ups_amazon_pb2
+import world_ups_pb2 as wupb
+import ups_amazon_pb2 as uapb
 from db import *
 from utility import *
 
 world_host = 'vcm-14675.vm.duke.edu'
 world_port = 12345
 amazon_host = ''
-amazon_port = ''
+amazon_port = 7777
 world = 0
 
 def handle_world(Cw, Ca, Cdb):
@@ -42,7 +42,7 @@ def main():
      create_table(Cdb)
      # get worldid and tell amazon using UA_Connect
      world_id = get_world_id(Cw, world, Cdb)
-     ua_con = UA_Connect()
+     ua_con = uapb.UA_Connect()
      ua_con.worldid = world_id
      Ca = connect_to_amazon(amazon_host, amazon_port)
      send_msg(Ca, ua_con)

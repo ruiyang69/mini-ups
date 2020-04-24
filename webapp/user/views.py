@@ -5,16 +5,22 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from package.forms import CreatePackageForm
 from package.models import Package
+from .models import Customer
 
+user_id = 0
 # Create your views here.
 def home(request):
      return render(request, 'index.html')
 
 
 def register(request):
+    global user_id
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
+            customer = form.save(commit = False)
+            customer.user_id = user_id
+            user_id += 1
             form.save()
             messages.success(request, f'You are now able to login!')
             return redirect('login')
@@ -25,8 +31,7 @@ def register(request):
 
 @login_required
 def profile(request):
-    user = request.user
-    package = Package.objects.filter(owner = request.user.username)
+    package = Package.objects.filter(owner_id = request.user.id)
     return render(request, 'user/profile.html', {'package': package})
 
 
@@ -37,9 +42,10 @@ def create_package(request):
     if request.method == 'POST':
         form = CreatePackageForm(request.POST)
         if form.is_valid():
+            package = form.save(commit = False)
+            package.owner_id = request.user.id
             form.save()
-            package = Package.objects.filter(owner=request.user.username)
-            print(package)
+            package = Package.objects.filter(owner_id = request.user.id)
             return render(request, 'user/profile.html', {'package': package})
     else:
         form = CreatePackageForm()

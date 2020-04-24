@@ -11,16 +11,16 @@ class TrackForm(forms.ModelForm):
 class CreatePackageForm(forms.ModelForm):
     class Meta:
           model = Package
-          fields = '__all__'
+          fields = ['package_id', 'dst_x', 'dst_y', 'item']
 
           widget = {
             'package_id': forms.TextInput(attrs={ 'class': 'form-control',}),
             'dst_x': forms.TextInput(attrs={ 'class': 'form-control',}),
             'dst_y': forms.TextInput(attrs={ 'class': 'form-control',}),
-            'cur_x': forms.TextInput(attrs={ 'class': 'form-control',}),
-            'cur_y': forms.TextInput(attrs={ 'class': 'form-control',}),
-            'status': forms.TextInput(attrs={ 'class': 'form-control',}),
-            'truck_id': forms.TextInput(attrs={ 'class': 'form-control',}),
+            # 'cur_x': forms.TextInput(attrs={ 'class': 'form-control',}),
+            # 'cur_y': forms.TextInput(attrs={ 'class': 'form-control',}),
+            # 'status': forms.TextInput(attrs={ 'class': 'form-control',}),
+            # 'truck_id': forms.TextInput(attrs={ 'class': 'form-control',}),
             'item': forms.TextInput(attrs={ 'class': 'form-control',}),
           }
 

@@ -11,8 +11,8 @@ class Package(models.Model):
     cur_y = models.IntegerField(blank = True, null = True)
 
     status = models.CharField(max_length=200, default = 'created')
-    truck_id = models.IntegerField()
+    truck_id = models.IntegerField(blank = True, null = True)
 
-    item = models.CharField(max_length = 200, default = '')
+    item = models.CharField(max_length = 200, default = '', blank = True)
     # owner = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
-    owner = models.CharField(max_length = 200, default = '')
+    owner_id = models.IntegerField(blank = False, null = False, default = 0)

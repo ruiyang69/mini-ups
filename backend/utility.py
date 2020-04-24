@@ -1,5 +1,6 @@
 import socket
 import time
+import threading
 import select
 import smtplib, ssl
 from db import *
@@ -25,12 +26,12 @@ seqnum = 0
 
 # generic send message function
 def send_msg(socket, msg):
-    print('sending: "')
+    print('sending: ')
     print(msg)
     rqst = msg.SerializeToString()
     _EncodeVarint(socket.send, len(rqst), None)
     socket.send(rqst)
-    print('"send succeeds.')
+    # print('"send succeeds.')
 
 
 # Recv function between UPS and world
@@ -94,25 +95,42 @@ def get_world_id(Cw, world, Cdb):
 # process UResponse
 def process_UResponse(UResponse, Cw, Ca, Cdb):
     global seqnum
+    send_world = False
+    send_amazon = False
+
     to_world = wupb.UCommands()
     to_amazon = uapb.UA_Responses()
 
     print('checking UFinished')
     for ufin in UResponse.completions:
-        to_world.ack.append(ufin.seqnum)
+        send_world = True
+        to_world.acks.append(ufin.seqnum)
+
         if ufin.status == 'arrive warehouse':
-            print('a truck has arrived at warehouse, notify Amazon')
+            print('a truck with truck_id = ' + str(ufin.truckid) + ' has arrived at warehouse, notify Amazon')
+            send_amazon = True
+            to_amazon.acks.append(ufin.seqnum)
             UA_TruckArrived = to_amazon.truckArrived
-            UA_TruckArrived.truckid = ufin.trackid
+            UA_TruckArrived.truckid = ufin.truckid
+            UA_TruckArrived.whnum = get_truck_whnum(Cdb, ufin.truckid)
             with seq_lock:
                 UA_TruckArrived.seqnum = seqnum
                 seqnum += 1
             
-            update_truck_status(Cdb, ufin.trackid, 'loading')
+            update_truck_status(Cdb, ufin.truckid, 'loading')
+
+        if ufin.status == 'idle':
+            print('DB update: update truck status = "idle" for truck_id = ' + str(ufin.truckid))
+            update_truck_status(Cdb, ufin.truckid, 'idle')
 
     
-    print('checking UDeliveryMade')
+    # check UDeliveryMade
     for udel in UResponse.delivered:
+        print('receive UDeliveryMade from the world')
+        send_amazon = True
+        send_world = True
+        # to_world.acks.append(udel.seqnum)
+
         to_world.ack.append(udel.seqnum)
         UA_Delivered = to_amazon.delivered
         UA_Delivered.packageid = udel.packageid
@@ -121,24 +139,47 @@ def process_UResponse(UResponse, Cw, Ca, Cdb):
             UA_Delivered.seqnum = seqnum
             seqnum += 1
         
-        update_package_status(Cdb, ufin.packageid, 'delivered')
+        print('DB update: update package stautus = "delivered" for package_id = ' + str(udel.packageid))
+        update_package_status(Cdb, udel.packageid, 'delivered')
+        print('DB update: update truck status = "idle" for truck_id = ' + str(udel.truckid))
+        update_truck_status(Cdb, udel.truckid, 'idle')
 
-    print('checking UTruck')
+
+    # check UTruck
     for utru in UResponse.truckstatus:
-        to_world.acks.append(utruck.seqnum)    
+        print('receive Utruck from the world')
+        send_world = True
+        to_world.acks.append(utruck.seqnum) 
+        print('DB update: update package position for truck_id = ' + str(utru.truckid) + ', new position = ' + utru.x + ',' +utru.y)   
         update_package_pos(Cdb, utru.truckid, utru.x, utru.y)
 
-    send_msg(Cw, to_world)    
-    send_msg(Ca, to_amazon)
+
+    # check UErr
+    for uerr in UResponse.error:
+        print('receive UErr from the world')
+        print('Erro: ' + uerr.err)
+        print('Original seqnum: ' + str(uerr.originseqnum))
+        print('Current seqnum: ' + str(uerr.seqnum))
+
+
+    if send_world:
+        send_msg(Cw, to_world)    
+    if send_amazon:
+        send_msg(Ca, to_amazon)
 
 
 
 # connection to Amazon
 def connect_to_amazon(hostname, port):
     print('Connecting to Amazon...')
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((hostname, port))
-    return s
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    amazon = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    amazon.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    amazon.bind(('', port))
+    amazon.listen(5)
+    amazon_socket, addr = amazon.accept()
+
+    return amazon_socket
 
 
 def amazon_ups_recv(sock):
@@ -166,81 +207,116 @@ def amazon_ups_recv(sock):
 
 def process_UA_Command(UA_Commands, Cw, Ca, Cdb):
     global seqnum
-    to_amazon_ack = UA_Commands.acks
+    to_amazon = uapb.UA_Responses()
     to_world = wupb.UCommands()
+    send_amazon = False
+    send_world = False
 
-    #print('recieve Amazon truck call')
-    truck_id = 0
-    for uacmd in UA_Commands.truckCall:
-        to_amazon_ack.append(uacmd.seqnum)
-        # insert trucks, initial status is "free status"
-        insert_truck(C, truck_id, "truck free status")
-        truck_id += 1
-        to_world.pickups.append(truck_id, uacmd.whnum, seqnum)
-        send_msg(Cw, to_world) 
 
+    # print('recieve Amazon truck call')
+    for uatru in UA_Commands.truckCall:
+        send_world = True
+        send_amazon = True
+        # received UA_TruckCall from Amazon and send UCommands to world
+        print('received UA_TruckCall from Amazon')
+        to_amazon.acks.append(uatru.seqnum)
+        # set up UCommands
+        UGoPickup = to_world.pickups.add()
+        UGoPickup.truckid = find_free_truck(Cdb)
+        UGoPickup.whid = uatru.whnum
         with seq_lock:
-                to_world.pickups.seqnum = seqnum
+                UGoPickup.seqnum = seqnum
                 seqnum += 1 
 
-    # send ack and go pick up
-    send_msg(Ca, to_amazon_ack)
-    send_msg(Cw, to_world)
+        # update the databse
+        print('DB update: insert new package with package_id = ' + str(uatru.package_id))
+        insert_package(Cdb, uatru.package_id, uatru.dest_x, uatru.dest_y, 'packed', UGoPickup.truckid, 
+            'uatru.products.description', uatru.owner_id)
+        print('DB update: update truck status = "traveling" for truck_id = ' + str(UGoPickup.truckid))
+        update_truck_status(Cdb, UGoPickup.truckid, 'traveling')
 
-    #recieve Ufinished
-    U_response = world_ups_recv(Cw, True)
-    to_amazon_truckarr = UA_Commands
-    for uresp in U_response.completions:
-        to_amazon_truckarr.truckArrived.append(to_amazon_truckarr.whnum, uresp.truckid, uresp.seqnum)
-        # update truck status
-        update_truck_status(C, uresp.truckid, "the truck is used")
 
+    for uagod in UA_Commands.goDeliver:
+        send_world = True
+        print('receive UA_GoDeliver from Amazon')
+        to_amazon.acks.append(uagod.seqnum)
+        UGoDeliver = to_world.deliveries.add()
+        UGoDeliver.truckid = uagod.truckid
+        pack = UGoDeliver.packages.add()
+        pack.packageid = uagod.packageid
+        pack.x = uagod.x
+        pack.y = uagod.y
+        
         with seq_lock:
-                uresp.seqnum = seqnum
-                seqnum += 1 
+            UGoDeliver.seqnum = seqnum
+            seqnum += 1
 
-    # send truck arrived
-    send_msg(Ca, to_amazon_truckarr)
+        print('DB update: update truck status = "delivering" for truck_id = ' + str(uagod.truckid))
+        update_truck_status(Cdb, uagod.truckid, 'delivering')
+        print('DB update: update package status = "delivering" for package_id = ' + str(uagod.packageid))
+        update_package_status(Cdb, uagod.packageid, 'delivering')
 
-    #recieve ack from amazon
-    a_recv = amazon_ups_recv(Ca)
 
-    # recieve aloaded
-    ua_rep = amazon_ups_recv(Ca)
-    to_amazon_ack2 = ua_rep.acks
-    # go deliver
-    to_world2 = wupb.UCommands()
-    for aload in ua_rep.goDeliver:
-        to_amazon_ack2.append(aload.seqnum)                
-        UDeliveryLocation = to_world2.deliveries
-        UDeliveryLocation.packageid = aload.packageid
-        UDeliveryLocation.x = aload.x
-        UDeliveryLocation.y = aload.y
-        to_world2.deliveries.append(aload.truckid, UDeliveryLocation, aload.seqnum)
+    if send_world:
+        send_msg(Cw, to_world)    
+    if send_amazon:
+        send_msg(Ca, to_amazon)
 
-        # update truck status
-        update_truck_status(C, aload.truckid, "truck free status")
 
-        with seq_lock:
-                aload.seqnum = seqnum
-                seqnum += 1 
+    # #recieve Ufinished
+    # U_response = world_ups_recv(Cw, True)
+    # to_amazon_truckarr = UA_Commands
+    # for uresp in U_response.completions:
+    #     to_amazon_truckarr.truckArrived.append(to_amazon_truckarr.whnum, uresp.truckid, uresp.seqnum)
+    #     # update truck status
+    #     update_truck_status(C, uresp.truckid, "the truck is used")
 
-    # send ack and go deliever
-    send_msg(Ca, to_amazon_ack2)
-    send_msg(Cw, to_world2)
+    #     with seq_lock:
+    #             uresp.seqnum = seqnum
+    #             seqnum += 1 
 
-    #recieve Udelievered made
-    U_response_D = world_ups_recv(Cw, True)
-    to_amazon_UD = UA_Commands
-    for ud in U_response_D.delivered:
-       to_amazon_UD.goDeliver.append(ud.truckid, ud.packageid, U_response_D.completions.x, U_response_D.completions.y, ud.seqnum)
+    # # send truck arrived
+    # send_msg(Ca, to_amazon_truckarr)
 
-       with seq_lock:
-                ud.seqnum = seqnum
-                seqnum += 1
+    # #recieve ack from amazon
+    # a_recv = amazon_ups_recv(Ca)
 
-    # send delievered
-    send_msg(Ca, to_amazon_UD)
+    # # recieve aloaded
+    # ua_rep = amazon_ups_recv(Ca)
+    # to_amazon_ack2 = ua_rep.acks
+    # # go deliver
+    # to_world2 = wupb.UCommands()
+    # for aload in ua_rep.goDeliver:
+    #     to_amazon_ack2.append(aload.seqnum)                
+    #     UDeliveryLocation = to_world2.deliveries
+    #     UDeliveryLocation.packageid = aload.packageid
+    #     UDeliveryLocation.x = aload.x
+    #     UDeliveryLocation.y = aload.y
+    #     to_world2.deliveries.append(aload.truckid, UDeliveryLocation, aload.seqnum)
 
-    #recieve ack from amazon
-    b_recv = amazon_ups_recv(Ca)
+    #     # update truck status
+    #     update_truck_status(C, aload.truckid, 'idle')
+
+    #     with seq_lock:
+    #             aload.seqnum = seqnum
+    #             seqnum += 1 
+
+    # # send ack and go deliever
+    # send_msg(Ca, to_amazon_ack2)
+    # send_msg(Cw, to_world2)
+
+    # #recieve Udelievered made
+    # U_response_D = world_ups_recv(Cw, True)
+    # to_amazon_UD = UA_Commands
+    # for ud in U_response_D.delivered:
+    #    to_amazon_UD.goDeliver.append(ud.truckid, ud.packageid, U_response_D.completions.x, U_response_D.completions.y, ud.seqnum)
+
+    #    with seq_lock:
+    #             ud.seqnum = seqnum
+    #             seqnum += 1
+
+    # # send delievered
+    # send_msg(Ca, to_amazon_UD)
+
+    # #recieve ack from amazon
+    # b_recv = amazon_ups_recv(Ca)
