@@ -6,8 +6,6 @@
          {% if package %}
            <p>Package ID: {{ package.package_id }}</p>
            <p>Status: {{package.status}}</p>
-           <p>Item: {{ package.item }} </p>
-           <p>Current location: {{ package.cur_x }},{{package.cur_y}}</p>
            <p>Destination: {{package.dst_x}},{{package.dst_y}}</p>
            <a class="nav-item nav-link" href="{% url 'redirect' package_id=package.package_id %}">Redirect</a>
          {%endif%}  

@@ -6,22 +6,24 @@ from django.contrib.auth.decorators import login_required
 from package.forms import CreatePackageForm
 from package.models import Package
 from .models import Customer
+from .forms import UpdateOwneridForm
 
-user_id = 0
 # Create your views here.
 def home(request):
      return render(request, 'index.html')
 
 
 def register(request):
-    global user_id
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            customer = form.save(commit = False)
-            customer.user_id = user_id
-            user_id += 1
-            form.save()
+            user = form.save()
+            customer = Customer()
+            customer.user = user
+            customer.owner_id  = 0
+            customer.save()
+            c = Customer.objects.filter(owner_id = 0)
+            print(c)
             messages.success(request, f'You are now able to login!')
             return redirect('login')
     else:
@@ -31,7 +33,8 @@ def register(request):
 
 @login_required
 def profile(request):
-    package = Package.objects.filter(owner_id = request.user.id)
+    customer = Customer.objects.filter(user = request.user).first()
+    package = Package.objects.filter(owner_id = customer.owner_id)
     return render(request, 'user/profile.html', {'package': package})
 
 
@@ -56,3 +59,19 @@ def create_package(request):
 def detail(request, package_id):
     package = Package.objects.filter(package_id = package_id).first()
     return render(request, 'user/detail.html', {'package': package})
+
+
+def update_ownerid(request):
+    form = UpdateOwneridForm()
+    if request.method == 'POST':
+        form = UpdateOwneridForm(request.POST)
+        if form.is_valid():
+            new_id = form.cleaned_data['owner_id']
+            cur_customer = Customer.objects.filter(user = request.user).first()
+            cur_customer.owner_id = new_id
+            cur_customer.save()
+            messages.success(request, f'you have updated your owner id')
+            return render(request, 'index.html')
+
+    else:
+        return render(request, 'user/update_ownerid.html', {'form': form})

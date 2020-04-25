@@ -11,7 +11,7 @@
             {% for p in package %}
               <p>
                 <a  href = "{% url 'detail' package_id=p.package_id %}">
-                  {{ p.item }}
+                  {{ p.package_id }}
                 </a>
               </p>
             {% endfor %} 

@@ -13,4 +13,5 @@ urlpatterns = [
     path('create/', views.create_package, name = 'create'),
     path('detail/<package_id>/', views.detail, name = 'detail'),
     path('redirect/<package_id>', package_views.redirect_package, name = 'redirect'),
+    path('update_ownerid/', views.update_ownerid, name = 'update'),
 ]

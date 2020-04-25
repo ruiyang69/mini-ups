@@ -23,6 +23,50 @@ DESCRIPTOR = _descriptor.FileDescriptor(
 
 
 
+_APRODUCT = _descriptor.Descriptor(
+  name='AProduct',
+  full_name='AProduct',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='id', full_name='AProduct.id', index=0,
+      number=1, type=3, cpp_type=2, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='description', full_name='AProduct.description', index=1,
+      number=2, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='count', full_name='AProduct.count', index=2,
+      number=3, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=625,
+  serialized_end=683,
+)
+
 
 _UA_CONNECT = _descriptor.Descriptor(
   name='UA_Connect',
@@ -367,55 +411,57 @@ _UA_RESPONSES = _descriptor.Descriptor(
 )
 
 
-_APRODUCT = _descriptor.Descriptor(
-  name='AProduct',
-  full_name='AProduct',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='id', full_name='AProduct.id', index=0,
-      number=1, type=3, cpp_type=2, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='description', full_name='AProduct.description', index=1,
-      number=2, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='count', full_name='AProduct.count', index=2,
-      number=3, type=5, cpp_type=1, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto2',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=625,
-  serialized_end=683,
-)
+# _APRODUCT = _descriptor.Descriptor(
+#   name='AProduct',
+#   full_name='AProduct',
+#   filename=None,
+#   file=DESCRIPTOR,
+#   containing_type=None,
+#   fields=[
+#     _descriptor.FieldDescriptor(
+#       name='id', full_name='AProduct.id', index=0,
+#       number=1, type=3, cpp_type=2, label=2,
+#       has_default_value=False, default_value=0,
+#       message_type=None, enum_type=None, containing_type=None,
+#       is_extension=False, extension_scope=None,
+#       serialized_options=None, file=DESCRIPTOR),
+#     _descriptor.FieldDescriptor(
+#       name='description', full_name='AProduct.description', index=1,
+#       number=2, type=9, cpp_type=9, label=2,
+#       has_default_value=False, default_value=b"".decode('utf-8'),
+#       message_type=None, enum_type=None, containing_type=None,
+#       is_extension=False, extension_scope=None,
+#       serialized_options=None, file=DESCRIPTOR),
+#     _descriptor.FieldDescriptor(
+#       name='count', full_name='AProduct.count', index=2,
+#       number=3, type=5, cpp_type=1, label=2,
+#       has_default_value=False, default_value=0,
+#       message_type=None, enum_type=None, containing_type=None,
+#       is_extension=False, extension_scope=None,
+#       serialized_options=None, file=DESCRIPTOR),
+#   ],
+#   extensions=[
+#   ],
+#   nested_types=[],
+#   enum_types=[
+#   ],
+#   serialized_options=None,
+#   is_extendable=False,
+#   syntax='proto2',
+#   extension_ranges=[],
+#   oneofs=[
+#   ],
+#   serialized_start=625,
+#   serialized_end=683,
+# )
+
 
 _UA_TRUCKCALL.fields_by_name['products'].message_type = _APRODUCT
 _UA_COMMANDS.fields_by_name['truckCall'].message_type = _UA_TRUCKCALL
 _UA_COMMANDS.fields_by_name['goDeliver'].message_type = _UA_GODELIVER
 _UA_RESPONSES.fields_by_name['truckArrived'].message_type = _UA_TRUCKARRIVED
 _UA_RESPONSES.fields_by_name['delivered'].message_type = _UA_DELIVERED
+DESCRIPTOR.message_types_by_name['AProduct'] = _APRODUCT
 DESCRIPTOR.message_types_by_name['UA_Connect'] = _UA_CONNECT
 DESCRIPTOR.message_types_by_name['UA_TruckCall'] = _UA_TRUCKCALL
 DESCRIPTOR.message_types_by_name['UA_GoDeliver'] = _UA_GODELIVER
@@ -423,8 +469,16 @@ DESCRIPTOR.message_types_by_name['UA_TruckArrived'] = _UA_TRUCKARRIVED
 DESCRIPTOR.message_types_by_name['UA_Delivered'] = _UA_DELIVERED
 DESCRIPTOR.message_types_by_name['UA_Commands'] = _UA_COMMANDS
 DESCRIPTOR.message_types_by_name['UA_Responses'] = _UA_RESPONSES
-DESCRIPTOR.message_types_by_name['AProduct'] = _APRODUCT
+# DESCRIPTOR.message_types_by_name['AProduct'] = _APRODUCT
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+
+AProduct = _reflection.GeneratedProtocolMessageType('AProduct', (_message.Message,), {
+  'DESCRIPTOR' : _APRODUCT,
+  '__module__' : 'ups_amazon_pb2'
+  # @@protoc_insertion_point(class_scope:AProduct)
+  })
+_sym_db.RegisterMessage(AProduct)
 
 UA_Connect = _reflection.GeneratedProtocolMessageType('UA_Connect', (_message.Message,), {
   'DESCRIPTOR' : _UA_CONNECT,
@@ -475,12 +529,12 @@ UA_Responses = _reflection.GeneratedProtocolMessageType('UA_Responses', (_messag
   })
 _sym_db.RegisterMessage(UA_Responses)
 
-AProduct = _reflection.GeneratedProtocolMessageType('AProduct', (_message.Message,), {
-  'DESCRIPTOR' : _APRODUCT,
-  '__module__' : 'ups_amazon_pb2'
-  # @@protoc_insertion_point(class_scope:AProduct)
-  })
-_sym_db.RegisterMessage(AProduct)
+# AProduct = _reflection.GeneratedProtocolMessageType('AProduct', (_message.Message,), {
+#   'DESCRIPTOR' : _APRODUCT,
+#   '__module__' : 'ups_amazon_pb2'
+#   # @@protoc_insertion_point(class_scope:AProduct)
+#   })
+# _sym_db.RegisterMessage(AProduct)
 
 
 # @@protoc_insertion_point(module_scope)

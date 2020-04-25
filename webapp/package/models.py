@@ -5,8 +5,8 @@ from user.models import Customer
 class Package(models.Model):
     package_id = models.IntegerField()
 
-    dst_x = models.IntegerField()
-    dst_y = models.IntegerField()
+    dst_x = models.IntegerField(blank = True, null = True)
+    dst_y = models.IntegerField(blank = True, null = True)
     cur_x = models.IntegerField(blank = True, null = True)
     cur_y = models.IntegerField(blank = True, null = True)
 

@@ -134,6 +134,15 @@ def find_free_truck(C):
      else:
           return row[0]
 
+def update_truck_whnum(C, truck_id, whnum):
+     with db_lock:
+          cur= C.cursor()
+          sql = '''
+               UPDATE trucks SET whnum = ? WHERE truck_id = ?;
+          '''
+          cur.execute(sql, (whnum, truck_id))
+          C.commit()
+
 
 def get_truck_whnum(C, truck_id):
      with db_lock:
@@ -141,3 +150,4 @@ def get_truck_whnum(C, truck_id):
           sql = '''SELECT whnum FROM trucks WHERE truck_id = ?;'''
           cur.execute(sql, (truck_id))
           return cur.fetchone()
+

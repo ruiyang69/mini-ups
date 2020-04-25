@@ -11,7 +11,7 @@ class TrackForm(forms.ModelForm):
 class CreatePackageForm(forms.ModelForm):
     class Meta:
           model = Package
-          fields = ['package_id', 'dst_x', 'dst_y', 'item']
+          fields = ['package_id', 'dst_x', 'dst_y', 'item', 'owner_id']
 
           widget = {
             'package_id': forms.TextInput(attrs={ 'class': 'form-control',}),
@@ -22,6 +22,7 @@ class CreatePackageForm(forms.ModelForm):
             # 'status': forms.TextInput(attrs={ 'class': 'form-control',}),
             # 'truck_id': forms.TextInput(attrs={ 'class': 'form-control',}),
             'item': forms.TextInput(attrs={ 'class': 'form-control',}),
+            'owner_id' :forms.TextInput(attrs={ 'class': 'form-control',}),
           }
 
 

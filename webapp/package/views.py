@@ -34,13 +34,14 @@ def redirect_package(request, package_id):
                     new_dst_x = form.cleaned_data['dst_x']
                     new_dst_y = form.cleaned_data['dst_y']
                     package = Package.objects.filter(package_id = package_id).first()
-                    if(package and package.status is not 'delivered'):
+                    if(package and package.status !=  'delivered'):
+                         print(package.status)
                          package.dst_x = new_dst_x
                          package.dst_y = new_dst_y
                          package.save()
                          return render(request, 'user/detail.html', {'package': package})
                     else:
-                         messages.error(request, 'Cannot find a package with this id')
+                         messages.error(request, 'Cannot find a package with this id or it has been delivered')
                          form = RedirectForm()
                          return render(request, 'package/redirect.html', {'form': form})
      else: 
